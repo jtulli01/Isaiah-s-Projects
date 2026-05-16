@@ -28,6 +28,8 @@ import array
 import wave
 import io
 
+print("=== SCRIPT LOADED ===")
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Window / timing
 # ─────────────────────────────────────────────────────────────────────────────
@@ -436,11 +438,11 @@ class NumPad:
     COLS   = 4
 
     _GRID = [
-        ["7", "8", "9", "⌫"],
+        ["7", "8", "9", "<"],
         ["4", "5", "6", "-"],
         ["1", "2", "3", "0"],
     ]
-    _FIRE_LABEL = "FIRE!  🚀"
+    _FIRE_LABEL = "FIRE!"
 
     def __init__(self, top_y: int):
         self._top_y = top_y
@@ -483,7 +485,7 @@ class NumPad:
                 zip(self._GRID, self._grid_rects)):
             for lbl, rect in zip(row_lbl, row_rects):
                 hover = rect.collidepoint(mouse)
-                if lbl == "⌫":
+                if lbl == "<":
                     bg_col  = (100, 30, 30)
                     brd_col = RED
                 elif lbl == "-":
@@ -514,7 +516,7 @@ class NumPad:
         for row_lbl, row_rects in zip(self._GRID, self._grid_rects):
             for lbl, rect in zip(row_lbl, row_rects):
                 if rect.collidepoint(pos):
-                    return "BACKSPACE" if lbl == "⌫" else lbl
+                    return "BACKSPACE" if lbl == "<" else lbl
         if self._fire_rect and self._fire_rect.collidepoint(pos):
             return "FIRE"
         return None
@@ -539,13 +541,13 @@ _HIT_MSGS = [
     "Direct hit, Commander!",
     "KABOOM!  Nice shot, Isaiah!",
     "Target eliminated!",
-    "Stellar aim!  ⭐",
+    "Stellar aim!",
     "PERFECT shot!",
 ]
 _MISS_MSGS = [
-    "Asteroid escaped!  -1 Life ❤",
-    "Oh no — it got through!  -1 Life ❤",
-    "Shields hit!  -1 Life ❤",
+    "Asteroid escaped!  -1 Life",
+    "Oh no -- it got through!  -1 Life",
+    "Shields hit!  -1 Life",
 ]
 
 
@@ -607,9 +609,9 @@ class SpaceMathGame:
     # ─────────────────────────────────────────────────────────────────────────
     def _build_title_btns(self):
         items = [
-            ("🟢  EASY",   1, (26, 102,  50)),
-            ("🟡  MEDIUM", 2, (102, 102,  0)),
-            ("🔴  HARD",   3, (136,  34, 34)),
+            ("[ EASY ]",   1, (26, 102,  50)),
+            ("[MEDIUM]",   2, (102, 102,  0)),
+            ("[ HARD ]",   3, (136,  34, 34)),
         ]
         bw, bh = 200, 55
         y      = H - 115
@@ -640,7 +642,7 @@ class SpaceMathGame:
         t2 = self._f_med.render("A D V E N T U R E", True, YELLOW)
         s.blit(t2, t2.get_rect(center=(W // 2, 150)))
         t3 = pygame.font.SysFont("Arial", 18, italic=True).render(
-            "starring  Isaiah  🚀", True, PINK)
+            "starring  Isaiah", True, PINK)
         s.blit(t3, t3.get_rect(center=(W // 2, 186)))
 
         # Decorative rocket
@@ -671,7 +673,7 @@ class SpaceMathGame:
 
         score_t = self._f_small.render(f"Score: {self._score}", True, GREEN)
         lives_t = self._f_small.render(
-            "❤ " * self._lives + "🖤 " * (3 - self._lives), True, RED)
+            "* " * self._lives + "- " * (3 - self._lives), True, RED)
         lvl_t   = self._f_small.render(f"— {lvl_name} —", True, YELLOW)
 
         s.blit(score_t, (10, 8))
@@ -724,7 +726,7 @@ class SpaceMathGame:
         s.blit(gt, gt.get_rect(center=(W // 2, 285)))
 
         msg = self._f_small.render(
-            "Isaiah, you're an awesome Math Commander! 🚀", True, PINK)
+            "Isaiah, you're an awesome Math Commander!", True, PINK)
         s.blit(msg, msg.get_rect(center=(W // 2, 330)))
 
         # Buttons
@@ -776,17 +778,17 @@ class SpaceMathGame:
         lv = self._level
         if lv == 1:
             n1, n2 = random.randint(1, 10), random.randint(1, 10)
-            op = random.choice(["+", "−"])
+            op = random.choice(["+", "-"])
         elif lv == 2:
             n1, n2 = random.randint(2, 20), random.randint(1, 10)
-            op = random.choice(["+", "−", "×"])
+            op = random.choice(["+", "-", "x"])
         else:
             n1, n2 = random.randint(1, 12), random.randint(1, 12)
-            op = random.choice(["×", "+", "−"])
+            op = random.choice(["x", "+", "-"])
 
         if op == "+":
             ans = n1 + n2
-        elif op == "−":
+        elif op == "-":
             if n1 < n2:
                 n1, n2 = n2, n1
             ans = n1 - n2
@@ -985,30 +987,55 @@ class SpaceMathGame:
 #  ASYNC ENTRY POINT  (required by Pygbag)
 # ─────────────────────────────────────────────────────────────────────────────
 async def main():
-    pygame.init()
+    print("=== MAIN STARTING ===")
     try:
-        pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
-    except Exception as e:
-        print(f"Mixer init skipped: {e}")
+        pygame.init()
+        print("=== pygame.init() OK ===")
+        try:
+            pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
+            print("=== mixer.init() OK ===")
+        except Exception as e:
+            print(f"=== Mixer init skipped: {e} ===")
 
-    screen = pygame.display.set_mode((W, H))
-    pygame.display.set_caption("Isaiah's Space Math Adventure!")
+        screen = pygame.display.set_mode((W, H))
+        print("=== display.set_mode() OK ===")
+        pygame.display.set_caption("Isaiah's Space Math Adventure!")
 
-    sounds = load_sounds()
-    game   = SpaceMathGame(screen, sounds)
+        print("=== Loading sounds... ===")
+        sounds = load_sounds()
+        print(f"=== Sounds loaded: {list(sounds.keys())} ===")
 
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        print("=== Creating game... ===")
+        game   = SpaceMathGame(screen, sounds)
+        print("=== Game created OK ===")
+
+        running = True
+        frame_count = 0
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                else:
+                    game.handle_event(event)
+
+            try:
+                game.tick()
+                frame_count += 1
+                if frame_count <= 3:
+                    print(f"=== Frame {frame_count} OK ===")
+            except Exception as frame_err:
+                print(f"=== TICK ERROR frame {frame_count}: {frame_err} ===")
+                import traceback
+                traceback.print_exc()
                 running = False
-            else:
-                game.handle_event(event)
 
-        game.tick()
-        await asyncio.sleep(0)   # ← Pygbag requires this every frame
+            await asyncio.sleep(0)   # Pygbag requires this every frame
 
-    pygame.quit()
+        pygame.quit()
+    except Exception as e:
+        print(f"=== MAIN CRASH: {e} ===")
+        import traceback
+        traceback.print_exc()
 
 
 asyncio.run(main())
