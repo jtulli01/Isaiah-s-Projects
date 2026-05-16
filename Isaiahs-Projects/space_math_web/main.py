@@ -24,9 +24,6 @@ import asyncio
 import pygame
 import random
 import math
-import array
-import wave
-import io
 
 print("=== SCRIPT LOADED ===")
 
@@ -35,7 +32,6 @@ print("=== SCRIPT LOADED ===")
 # ─────────────────────────────────────────────────────────────────────────────
 W, H   = 800, 600
 FPS    = 60
-SR     = 22050          # audio sample rate
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Difficulty tables
@@ -70,106 +66,8 @@ PAD_TOP    = 502
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  8-BIT SOUND GENERATION
-#  All sounds are synthesised from scratch — no external files needed.
+#  SOUNDS — disabled for web (WASM Python lacks wave/array modules)
 # ─────────────────────────────────────────────────────────────────────────────
-
-def _samples_to_sound(samples: array.array, sr: int = SR) -> pygame.mixer.Sound:
-    """Wrap a mono 16-bit PCM array into a pygame Sound via an in-memory WAV."""
-    buf = io.BytesIO()
-    with wave.open(buf, "wb") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(sr)
-        wf.writeframes(samples.tobytes())
-    buf.seek(0)
-    return pygame.mixer.Sound(buf)
-
-
-def _square(freq: float, t: float) -> float:
-    return 1.0 if math.sin(2 * math.pi * freq * t) > 0 else -1.0
-
-
-def _sine(freq: float, t: float) -> float:
-    return math.sin(2 * math.pi * freq * t)
-
-
-def _noise() -> float:
-    return random.random() * 2.0 - 1.0
-
-
-# ── Laser: fast descending square-wave sweep ──────────────────────────────────
-def make_laser_sound() -> pygame.mixer.Sound:
-    n = int(SR * 0.15)
-    buf = array.array("h")
-    for i in range(n):
-        t    = i / SR
-        freq = 900 * (1.0 - i / n * 0.8) + 200
-        env  = 1.0 - i / n * 0.4
-        buf.append(int(_square(freq, t) * env * 0.55 * 32767))
-    return _samples_to_sound(buf)
-
-
-# ── Explosion: noise burst that fades out ─────────────────────────────────────
-def make_explosion_sound() -> pygame.mixer.Sound:
-    n = int(SR * 0.45)
-    buf = array.array("h")
-    for i in range(n):
-        env = (1.0 - i / n) ** 1.5
-        buf.append(int(_noise() * env * 0.65 * 32767))
-    return _samples_to_sound(buf)
-
-
-# ── Correct: ascending 4-note arpeggio (C5-E5-G5-C6) ─────────────────────────
-def make_correct_sound() -> pygame.mixer.Sound:
-    notes = [523, 659, 784, 1047]
-    buf = array.array("h")
-    note_len = int(SR * 0.10)
-    for freq in notes:
-        for i in range(note_len):
-            t   = i / SR
-            env = 1.0 if i < note_len * 0.7 else (note_len - i) / (note_len * 0.3)
-            buf.append(int(_square(freq, t) * env * 0.45 * 32767))
-    return _samples_to_sound(buf)
-
-
-# ── Wrong: short low buzz ─────────────────────────────────────────────────────
-def make_wrong_sound() -> pygame.mixer.Sound:
-    n = int(SR * 0.22)
-    buf = array.array("h")
-    for i in range(n):
-        t   = i / SR
-        env = 1.0 - i / n * 0.3
-        buf.append(int(_square(175, t) * env * 0.50 * 32767))
-    return _samples_to_sound(buf)
-
-
-# ── Miss: 3-note descending sine ─────────────────────────────────────────────
-def make_miss_sound() -> pygame.mixer.Sound:
-    notes = [440, 370, 294]
-    buf = array.array("h")
-    note_len = int(SR * 0.12)
-    for freq in notes:
-        for i in range(note_len):
-            t   = i / SR
-            env = 1.0 - i / note_len
-            buf.append(int(_sine(freq, t) * env * 0.55 * 32767))
-    return _samples_to_sound(buf)
-
-
-# ── Game over: 5-note chromatic descent ──────────────────────────────────────
-def make_gameover_sound() -> pygame.mixer.Sound:
-    notes = [392, 370, 349, 330, 262]
-    buf = array.array("h")
-    note_len = int(SR * 0.20)
-    for freq in notes:
-        for i in range(note_len):
-            t   = i / SR
-            env = max(0.0, 1.0 - i / (note_len * 1.1))
-            sq  = _square(freq, t)
-            buf.append(int(sq * env * 0.50 * 32767))
-    return _samples_to_sound(buf)
-
 
 def load_sounds() -> dict:
     """Sound disabled for web compatibility."""
