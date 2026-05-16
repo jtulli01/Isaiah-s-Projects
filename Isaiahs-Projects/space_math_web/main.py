@@ -172,22 +172,8 @@ def make_gameover_sound() -> pygame.mixer.Sound:
 
 
 def load_sounds() -> dict:
-    """Build all 8-bit sounds. Returns empty dict if mixer unavailable."""
-    makers = {
-        "laser":    make_laser_sound,
-        "explode":  make_explosion_sound,
-        "correct":  make_correct_sound,
-        "wrong":    make_wrong_sound,
-        "miss":     make_miss_sound,
-        "gameover": make_gameover_sound,
-    }
-    sounds = {}
-    for key, fn in makers.items():
-        try:
-            sounds[key] = fn()
-        except Exception:
-            pass
-    return sounds
+    """Sound disabled for web compatibility."""
+    return {}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -991,11 +977,8 @@ async def main():
     try:
         pygame.init()
         print("=== pygame.init() OK ===")
-        try:
-            pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
-            print("=== mixer.init() OK ===")
-        except Exception as e:
-            print(f"=== Mixer init skipped: {e} ===")
+        # Mixer disabled for web compatibility
+        # pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
 
         screen = pygame.display.set_mode((W, H))
         print("=== display.set_mode() OK ===")
