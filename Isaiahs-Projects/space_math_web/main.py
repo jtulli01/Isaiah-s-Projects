@@ -21,6 +21,7 @@ HOW TO PLAY:
 #  Imports
 # ─────────────────────────────────────────────────────────────────────────────
 import asyncio
+import array
 import pygame
 import random
 import math
@@ -32,6 +33,7 @@ print("=== SCRIPT LOADED ===")
 # ─────────────────────────────────────────────────────────────────────────────
 W, H   = 800, 700
 FPS    = 60
+SR     = 22050          # audio sample rate
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Difficulty tables
@@ -66,12 +68,110 @@ PAD_TOP    = 502
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  SOUNDS — disabled for web (WASM Python lacks wave/array modules)
+#  8-BIT SOUND GENERATION
+#  Synthesised from scratch using array.array + pygame buffer interface.
+#  No external files, no `wave` or `io` modules needed.
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _samples_to_sound(samples: array.array) -> pygame.mixer.Sound:
+    """Wrap a mono 16-bit PCM array into a pygame Sound via buffer interface."""
+    return pygame.mixer.Sound(buffer=samples)
+
+
+def _square(freq: float, t: float) -> float:
+    return 1.0 if math.sin(2 * math.pi * freq * t) > 0 else -1.0
+
+
+def _sine(freq: float, t: float) -> float:
+    return math.sin(2 * math.pi * freq * t)
+
+
+def _noise() -> float:
+    return random.random() * 2.0 - 1.0
+
+
+def make_laser_sound() -> pygame.mixer.Sound:
+    n = int(SR * 0.15)
+    buf = array.array("h")
+    for i in range(n):
+        t    = i / SR
+        freq = 900 * (1.0 - i / n * 0.8) + 200
+        env  = 1.0 - i / n * 0.4
+        buf.append(int(_square(freq, t) * env * 0.55 * 32767))
+    return _samples_to_sound(buf)
+
+
+def make_explosion_sound() -> pygame.mixer.Sound:
+    n = int(SR * 0.45)
+    buf = array.array("h")
+    for i in range(n):
+        env = (1.0 - i / n) ** 1.5
+        buf.append(int(_noise() * env * 0.65 * 32767))
+    return _samples_to_sound(buf)
+
+
+def make_correct_sound() -> pygame.mixer.Sound:
+    notes = [523, 659, 784, 1047]
+    buf = array.array("h")
+    note_len = int(SR * 0.10)
+    for freq in notes:
+        for i in range(note_len):
+            t   = i / SR
+            env = 1.0 if i < note_len * 0.7 else (note_len - i) / (note_len * 0.3)
+            buf.append(int(_square(freq, t) * env * 0.45 * 32767))
+    return _samples_to_sound(buf)
+
+
+def make_wrong_sound() -> pygame.mixer.Sound:
+    n = int(SR * 0.22)
+    buf = array.array("h")
+    for i in range(n):
+        t   = i / SR
+        env = 1.0 - i / n * 0.3
+        buf.append(int(_square(175, t) * env * 0.50 * 32767))
+    return _samples_to_sound(buf)
+
+
+def make_miss_sound() -> pygame.mixer.Sound:
+    notes = [440, 370, 294]
+    buf = array.array("h")
+    note_len = int(SR * 0.12)
+    for freq in notes:
+        for i in range(note_len):
+            t   = i / SR
+            env = 1.0 - i / note_len
+            buf.append(int(_sine(freq, t) * env * 0.55 * 32767))
+    return _samples_to_sound(buf)
+
+
+def make_gameover_sound() -> pygame.mixer.Sound:
+    notes = [392, 370, 349, 330, 262]
+    buf = array.array("h")
+    note_len = int(SR * 0.20)
+    for freq in notes:
+        for i in range(note_len):
+            t   = i / SR
+            env = max(0.0, 1.0 - i / (note_len * 1.1))
+            sq  = _square(freq, t)
+            buf.append(int(sq * env * 0.50 * 32767))
+    return _samples_to_sound(buf)
+
+
 def load_sounds() -> dict:
-    """Sound disabled for web compatibility."""
-    return {}
+    """Load all synthesised sound effects; returns {} if mixer unavailable."""
+    if not pygame.mixer.get_init():
+        return {}
+    try:
+        return {
+            "laser":    make_laser_sound(),
+            "explode":  make_explosion_sound(),
+            "correct":  make_correct_sound(),
+            "wrong":    make_wrong_sound(),
+            "miss":     make_miss_sound(),
+            "gameover": make_gameover_sound(),
+        }
+    except Exception:
+        return {}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -865,8 +965,11 @@ async def main():
     try:
         pygame.init()
         print("=== pygame.init() OK ===")
-        # Mixer disabled for web compatibility
-        # pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
+        try:
+            pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
+            print("=== mixer.init() OK ===")
+        except Exception as mix_err:
+            print(f"=== mixer.init() failed: {mix_err} ===")
 
         screen = pygame.display.set_mode((W, H))
         print("=== display.set_mode() OK ===")
