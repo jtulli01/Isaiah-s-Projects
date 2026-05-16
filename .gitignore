@@ -1,0 +1,18 @@
+# Pygbag build output
+space_math_web/build/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# VS Code
+.vscode/
