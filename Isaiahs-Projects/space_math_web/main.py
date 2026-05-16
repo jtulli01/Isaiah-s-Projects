@@ -30,7 +30,7 @@ print("=== SCRIPT LOADED ===")
 # ─────────────────────────────────────────────────────────────────────────────
 #  Window / timing
 # ─────────────────────────────────────────────────────────────────────────────
-W, H   = 800, 600
+W, H   = 800, 700
 FPS    = 60
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -735,14 +735,9 @@ class SpaceMathGame:
     #  EVENT HANDLER  (called once per event)
     # ─────────────────────────────────────────────────────────────────────────
     def handle_event(self, event: pygame.event.Event):
-        # Normalise finger-touch pos to screen coords
-        def touch_pos(e) -> tuple[int, int]:
-            return (int(e.x * W), int(e.y * H))
-
         if self._state == self.S_TITLE:
-            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
-                pos = touch_pos(event) if event.type == pygame.FINGERDOWN \
-                    else event.pos
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = event.pos
                 for rect, lbl, lv, col in self._title_btns:
                     if rect.collidepoint(pos):
                         self._start(lv)
@@ -763,9 +758,8 @@ class SpaceMathGame:
                         self._input_str += event.unicode
 
             # Touch / mouse
-            elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
-                pos = touch_pos(event) if event.type == pygame.FINGERDOWN \
-                    else event.pos
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = event.pos
                 if self._numpad:
                     result = self._numpad.handle_click(pos)
                     if result == "FIRE":
@@ -777,9 +771,8 @@ class SpaceMathGame:
                             self._input_str += result
 
         elif self._state == self.S_GAMEOVER:
-            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
-                pos = touch_pos(event) if event.type == pygame.FINGERDOWN \
-                    else event.pos
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = event.pos
                 for rect, lbl, fn, col in self._gameover_btns:
                     if rect.collidepoint(pos):
                         fn()
