@@ -1,2 +1,4 @@
 [build]
   publish = "build/web"
+  command = ""
+  ignore = "exit 0"
