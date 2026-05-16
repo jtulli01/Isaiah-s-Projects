@@ -575,7 +575,21 @@ class SpaceMathGame:
         self._title_btns:   list[tuple] = []  # (rect, level, colour)
         self._gameover_btns: list[tuple] = []  # (rect, label, callback, colour)
 
+        self._mixer_inited = False   # deferred until first user gesture
+
         self._build_title_btns()
+
+    # ── Lazy mixer init (browsers block audio before user gesture) ────────────
+    def _ensure_mixer(self):
+        if self._mixer_inited:
+            return
+        self._mixer_inited = True
+        try:
+            pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
+            self._sounds = load_sounds()
+            print("=== mixer init on gesture OK ===")
+        except Exception as e:
+            print(f"=== mixer init on gesture failed: {e} ===")
 
     # ── Sound helper ─────────────────────────────────────────────────────────
     def _play(self, key: str):
@@ -832,6 +846,10 @@ class SpaceMathGame:
     #  EVENT HANDLER  (called once per event)
     # ─────────────────────────────────────────────────────────────────────────
     def handle_event(self, event: pygame.event.Event):
+        # Init mixer on first click — satisfies browser autoplay policy
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self._ensure_mixer()
+
         if self._state == self.S_TITLE:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
@@ -965,22 +983,14 @@ async def main():
     try:
         pygame.init()
         print("=== pygame.init() OK ===")
-        try:
-            pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
-            print("=== mixer.init() OK ===")
-        except Exception as mix_err:
-            print(f"=== mixer.init() failed: {mix_err} ===")
 
         screen = pygame.display.set_mode((W, H))
         print("=== display.set_mode() OK ===")
         pygame.display.set_caption("Isaiah's Space Math Adventure!")
 
-        print("=== Loading sounds... ===")
-        sounds = load_sounds()
-        print(f"=== Sounds loaded: {list(sounds.keys())} ===")
-
+        # Mixer is initialised lazily on first click (browser autoplay policy)
         print("=== Creating game... ===")
-        game   = SpaceMathGame(screen, sounds)
+        game   = SpaceMathGame(screen, {})
         print("=== Game created OK ===")
 
         running = True
