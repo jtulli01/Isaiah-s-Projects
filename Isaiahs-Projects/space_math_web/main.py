@@ -421,12 +421,9 @@ def draw_rounded_rect(surface: pygame.Surface, colour: tuple,
 #  MAIN GAME CLASS
 # ─────────────────────────────────────────────────────────────────────────────
 _HIT_MSGS = [
-    "BOOM!  Asteroid destroyed!",
-    "Direct hit, Commander!",
-    "KABOOM!  Nice shot, Isaiah!",
-    "Target eliminated!",
-    "Stellar aim!",
-    "PERFECT shot!",
+    "How dare you look at my masterpiece and say that",
+    "You think blowing up Asteroids is easy?",
+    "I'll burn the skin off your bones!",
 ]
 _MISS_MSGS = [
     "Asteroid escaped!  -1 Life",
