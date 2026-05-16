@@ -986,7 +986,10 @@ class SpaceMathGame:
 # ─────────────────────────────────────────────────────────────────────────────
 async def main():
     pygame.init()
-    pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
+    try:
+        pygame.mixer.init(frequency=SR, size=-16, channels=1, buffer=512)
+    except Exception as e:
+        print(f"Mixer init skipped: {e}")
 
     screen = pygame.display.set_mode((W, H))
     pygame.display.set_caption("Isaiah's Space Math Adventure!")
