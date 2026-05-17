@@ -611,9 +611,9 @@ class SpaceMathGame:
     # ─────────────────────────────────────────────────────────────────────────
     def _build_title_btns(self):
         items = [
-            ("[ EASY ]",   1, (26, 102,  50)),
-            ("[MEDIUM]",   2, (102, 102,  0)),
-            ("[ HARD ]",   3, (136,  34, 34)),
+            ("4th Grade",  1, (26, 102,  50)),
+            ("5th Grade",  2, (102, 102,  0)),
+            ("6th Grade",  3, (136,  34, 34)),
         ]
         bw, bh = 200, 55
         y      = H - 115
@@ -671,7 +671,7 @@ class SpaceMathGame:
     # ─────────────────────────────────────────────────────────────────────────
     def _draw_hud(self):
         s = self._screen
-        lvl_name = {1: "EASY", 2: "MEDIUM", 3: "HARD"}[self._level]
+        lvl_name = {1: "4th Grade", 2: "5th Grade", 3: "6th Grade"}[self._level]
 
         score_t = self._f_small.render(f"Score: {self._score}", True, GREEN)
         lives_t = self._f_small.render(
@@ -778,24 +778,46 @@ class SpaceMathGame:
     # ─────────────────────────────────────────────────────────────────────────
     def _make_question(self) -> tuple[str, int]:
         lv = self._level
-        if lv == 1:
-            n1, n2 = random.randint(1, 10), random.randint(1, 10)
-            op = random.choice(["+", "-"])
-        elif lv == 2:
-            n1, n2 = random.randint(2, 20), random.randint(1, 10)
-            op = random.choice(["+", "-", "x"])
-        else:
-            n1, n2 = random.randint(1, 12), random.randint(1, 12)
-            op = random.choice(["x", "+", "-"])
 
-        if op == "+":
-            ans = n1 + n2
-        elif op == "-":
-            if n1 < n2:
+        if lv == 1:
+            # 4th grade: addition & subtraction, numbers 1–20 (answer always >= 0)
+            n1, n2 = random.randint(1, 20), random.randint(1, 20)
+            op = random.choice(["+", "-"])
+            if op == "-" and n1 < n2:
                 n1, n2 = n2, n1
-            ans = n1 - n2
+            ans = n1 + n2 if op == "+" else n1 - n2
+
+        elif lv == 2:
+            # 5th grade: add/sub up to 50, multiplication up to 12x12
+            op = random.choice(["+", "-", "x"])
+            if op == "+":
+                n1, n2 = random.randint(10, 50), random.randint(1, 40)
+                ans = n1 + n2
+            elif op == "-":
+                n1, n2 = random.randint(10, 50), random.randint(1, 40)
+                if n1 < n2:
+                    n1, n2 = n2, n1
+                ans = n1 - n2
+            else:  # multiplication
+                n1, n2 = random.randint(2, 12), random.randint(2, 12)
+                ans = n1 * n2
+
         else:
-            ans = n1 * n2
+            # 6th grade: larger add/sub (negatives OK), multiply up to 15x15, divide
+            op = random.choice(["+", "-", "x", "÷"])
+            if op == "+":
+                n1, n2 = random.randint(20, 100), random.randint(20, 100)
+                ans = n1 + n2
+            elif op == "-":
+                n1, n2 = random.randint(20, 100), random.randint(20, 100)
+                ans = n1 - n2        # intentionally allow negative answers
+            elif op == "x":
+                n1, n2 = random.randint(3, 15), random.randint(3, 15)
+                ans = n1 * n2
+            else:  # division — always produces a whole number
+                n2  = random.randint(2, 12)
+                ans = random.randint(2, 12)
+                n1  = n2 * ans
 
         return f"{n1} {op} {n2} = ?", ans
 
