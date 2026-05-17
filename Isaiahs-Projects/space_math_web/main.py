@@ -524,6 +524,13 @@ _HIT_MSGS = [
     "How dare you look at my masterpiece and say that",
     "You think blowing up Asteroids is easy?",
     "I'll burn the skin off your bones!",
+    "Your king has returned!",
+    "That's the old Bowser talking",
+    "Open the Gates",
+    "Do you yield?",
+    "I finally found it",
+    "Peaches",
+    "You can't escape me",
 ]
 _MISS_MSGS = [
     "Asteroid escaped!  -1 Life",
